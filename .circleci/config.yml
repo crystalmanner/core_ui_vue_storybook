@@ -1,0 +1,42 @@
+# CircleCI 2.0 configuration file
+version: 2
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      - image: circleci/node:10.18
+
+    working_directory: ~/repo
+
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - 7a:93:a6:14:75:1d:8d:02:55:0d:2b:d6:e7:3c:21:6
+
+      - checkout
+
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "yarn.lock" }}
+
+      - run:
+          name: Install Node Dependencies
+          command: |
+            yarn install --frozen-lockfile
+
+      - save_cache:
+          paths:
+            - ~/repo/node_modules
+          key: v1-dependencies-{{ checksum "yarn.lock" }}
+
+      - run:
+          name: JS Lint
+          command: |
+            yarn lint
+          no_output_timeout: 20m
+
+      - run:
+          name: JS Test
+          command: |
+            yarn test --maxWorkers=4
+          no_output_timeout: 20m
